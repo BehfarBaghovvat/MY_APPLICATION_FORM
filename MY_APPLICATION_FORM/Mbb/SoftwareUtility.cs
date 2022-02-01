@@ -5,7 +5,17 @@ namespace Mbb
 {
     internal static class SoftwareUtility
     {
-        static SoftwareUtility()
+        private static string _otherValue = "SDL3-SL6D-77FJ-S3H5-LKJH-SERV";
+
+		public static string GetSQLServerId 
+        { 
+            get
+			{
+                return $"{GetSQLServerID().ToLower()}{_otherValue.ToLower()}";
+			}
+        }
+
+		static SoftwareUtility()
         {
 
         }
@@ -64,16 +74,13 @@ namespace Mbb
         }
 
         /// <summary>
-        /// 
+        /// Return the list of database names 
         /// </summary>
         /// <returns></returns>
         private static System.Collections.Generic.List<string> GetListDatabeseName()
         {
             System.Collections.Generic.List<string> listDatabase = 
                 new System.Collections.Generic.List<string>();
-
-
-
 
             System.Data.SqlClient.SqlConnection
                sc = new System.Data.SqlClient.SqlConnection("Data Source=.;Integrated Security=True");
@@ -112,33 +119,50 @@ namespace Mbb
             return listDatabase;
         }
 
+        /// <summary>
+        ///  Reture value InstallID
+        /// </summary>
+        /// <returns></returns>
+        private static string GetSQLServerID()
+		{
+            System.Collections.Generic.List<string> listDatabase =
+                new System.Collections.Generic.List<string>();
+
+            System.Data.SqlClient.SqlConnection
+               sc = new System.Data.SqlClient.SqlConnection("Data Source=.;Integrated Security=True");
+
+            sc.Open();
+            var command = new System.Data.SqlClient.SqlCommand();
+
+            command.Connection = sc;
+
+            command.CommandType = System.Data.CommandType.Text;
+            command.CommandText = "select value_data from sys.dm_server_registry where value_name= 'InstallID'";
+
+            var adapter = new System.Data.SqlClient.SqlDataAdapter(command);
+            var dataSet = new System.Data.DataSet();
+
+            adapter.Fill(dataSet);
+
+            return dataSet.Tables[0].Rows[0][0].ToString();
+        }       
 
         /// <summary>
         /// Returns Server Name And Database Name
         /// </summary>
         /// <returns>serverNameAndDatabaseName</returns>
-        internal static string GetUniqueSrial()
+        private static string GetUniqueSrial()
         {
             string setInfo = null;
 
             string
                 resultInfo,
-                myDatabase,
                 idCPU,
                 IdHDD,
                 serverName;
 
             serverName =
                 System.Environment.MachineName.Trim();
-
-            //if (string.Compare(GetListDatabeseName().Find(x => x.Contains("CNCFalwator")), "CNCFalwator") == 0)
-            //{
-            //    myDatabase = GetListDatabeseName().Find(x => x.Contains("CNCFalwator"));
-            //}
-            //else
-            //{
-            //    myDatabase = string.Empty;
-            //}
 
             idCPU = GetIdCPU();
             IdHDD = GetIdHDD();

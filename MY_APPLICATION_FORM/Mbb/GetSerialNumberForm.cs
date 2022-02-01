@@ -36,7 +36,6 @@ namespace Mbb
 		private string _expireDate;
 
 		private InformationLicense _informationLicense;
-
 		public InformationLicense Information_License
 		{
 			get
@@ -54,12 +53,15 @@ namespace Mbb
 			}
 		}
 
+		public bool PasteClick { get; set; }
 
-
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 		[System.Runtime.InteropServices.DllImport("user32.DLL", EntryPoint = "ReleaseCapture")]
 		private extern static void ReleaseCapture();
 		[System.Runtime.InteropServices.DllImport("user32.DLL", EntryPoint = "SendMessage")]
 		private extern static void SendMessage(System.IntPtr hwnd, int wmsg, int wparam, int lparam);
+		//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 		//----------------------------- Constructor
 
@@ -72,6 +74,7 @@ namespace Mbb
 
 		private void GetSerialNumberForm_Load(object sender, System.EventArgs e)
 		{
+			PasteClick = false;
 			notificationTimer.Start();
 		}
 
@@ -100,10 +103,19 @@ namespace Mbb
 
 		private void PasteButton_Click(object sender, System.EventArgs e)
 		{
-			inputSerialNumberTextBox.Text = GetLicenseKeyAndExpireDate().License_Key;
-			Information_License.Expire_Date = GetLicenseKeyAndExpireDate().Expire_Date;
+			if (string.IsNullOrWhiteSpace(System.Windows.Forms.Clipboard.GetText()))
+			{
+				PasteClick = false;
+			}
+			else
+			{
+				PasteClick = true;
 
-			System.Windows.Forms.MessageBox.Show($"Expire Date: {GetLicenseKeyAndExpireDate().Expire_Date.ToShortDateString()} Time Left: {GetLicenseKeyAndExpireDate().Day_Remaining.Days}");
+				inputSerialNumberTextBox.Text = GetLicenseKeyAndExpireDate().License_Key;
+				Information_License.Expire_Date = GetLicenseKeyAndExpireDate().Expire_Date;
+
+				System.Windows.Forms.MessageBox.Show($"Expire Date: {GetLicenseKeyAndExpireDate().Expire_Date.ToShortDateString()} Time Left: {GetLicenseKeyAndExpireDate().Day_Remaining.Days + 1}");
+			}
 		}
 
 		private void ActiveCodeTextBox_TextChanged(object sender, System.EventArgs e)
@@ -158,8 +170,6 @@ namespace Mbb
 
 		//----------------------------- Methods
 
-
-
 		private void SetLicenseCode(InformationLicense infoLicense)
 		{
 			Models.DataBaseContext dataBaseContext = null;
@@ -175,18 +185,35 @@ namespace Mbb
 
 				if (licenseKey != null)
 				{
-					licenseKey.License_Code = infoLicense.License_Key;
-					licenseKey.Expire_Date = infoLicense.Expire_Date.ToShortDateString();
+					if (!PasteClick)
+					{
+						licenseKey.License_Code = infoLicense.License_Key;
+						licenseKey.Expire_Date = string.Empty;
+					}
+					else
+					{
+						licenseKey.License_Code = infoLicense.License_Key;
+						licenseKey.Expire_Date = infoLicense.Expire_Date.ToShortDateString();
+					}
 				}
 
 				dataBaseContext.SaveChanges();
 
-				checkPictureBox.Visible = true;
+				messgeLabel.Text = "License key registered";
+				messgeLabel.ForeColor = System.Drawing.Color.LimeGreen;
+				notificationTimer.Stop();
 
+				checkPictureBox.Visible = true;
 			}
 			catch (System.Exception ex)
 			{
 				checkPictureBox.Visible = false;
+
+				messgeLabel.Text = "License key registered";
+
+				notificationTimer.Start();
+
+				messgeLabel.ForeColor = System.Drawing.Color.Tomato;
 
 				System.Windows.Forms.MessageBox.Show($"{ex.Message}");
 			}
@@ -217,7 +244,7 @@ namespace Mbb
 				System.DateTime.Now;
 
 			informationLicense.Day_Remaining =
-				informationLicense.Expire_Date.Subtract(nowDate);
+				informationLicense.Expire_Date.Date.Subtract(nowDate.Date);
 
 			return informationLicense;
 

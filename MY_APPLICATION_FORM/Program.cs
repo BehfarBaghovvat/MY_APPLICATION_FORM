@@ -4,12 +4,13 @@ namespace MY_APPLICATION_FORM
 {
 	internal static class Program
 	{
-		private static string  _serverNameAndDatabaseName = 
-			Mbb.SoftwareUtility.GetUniqueSrial().ToLower();
+		private static string _sqlServerId = 
+			Mbb.SoftwareUtility.GetSQLServerId;
 
 		private static string _activeCode =
-			Mbb.LockUtility.GetLicenseKeyByActiveCode(_serverNameAndDatabaseName);
+			Mbb.LockUtility.GetLicenseKeyByActiveCode(_sqlServerId);
 
+		#region SetAcivetCode
 		private static void SetAcivetCode(string activeCode)
 		{
 			Models.DataBaseContext dataBaseContext = null;
@@ -25,7 +26,7 @@ namespace MY_APPLICATION_FORM
 
 				if (licenseKey == null)
 				{
-					licenseKey = 
+					licenseKey =
 						new Models.LicenseKey { Active_Code = activeCode };
 
 					dataBaseContext.LicenseKeys.Add(licenseKey);
@@ -45,6 +46,7 @@ namespace MY_APPLICATION_FORM
 				}
 			}
 		}
+		#endregion /SetAcivetCode
 
 		private static Mbb.GetSerialNumberForm _getSerialNumberForm;
 		public static Mbb.GetSerialNumberForm GetSerialNumberForm
@@ -94,17 +96,18 @@ namespace MY_APPLICATION_FORM
 				int timeRemaining = Mbb.LicenseSetting.RemainingExpirationDate;
 
 
-				if ( timeRemaining <= 0)
+				if (timeRemaining <= 0)
 				{
 					System.Windows.Forms.MessageBox.Show("The program is expire!");
 
-					System.Windows.Forms.Application.Exit();
+					GetSerialNumberForm.activeCodeTextBox.Text = $"{_activeCode}";
+					GetSerialNumberForm.ShowDialog();
 				}
 				else
 				{
 					System.Windows.Forms.Application.Run(statupForm);
 				}
-				
+
 			}
 
 			//System.Windows.Forms.Application.Run(statupForm);
